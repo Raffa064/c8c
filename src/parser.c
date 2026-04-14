@@ -326,7 +326,6 @@ bool parse_opcode(Lex *l, Opcode *out_op, Label *out_label) {
 };
 
 void parse_file(CompilerState *cs, const char *path) {
-  printf("PARSING: %s\n", path);
   Lex l = create_lexer(path);
 
   LexResult result;

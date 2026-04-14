@@ -8,7 +8,6 @@
 
 #include "lexer.h"
 #include "core.h"
-#include "parser.h"
 
 typedef struct {
   const char *output_path;
@@ -28,7 +27,7 @@ void print_usage(FILE *out) {
     "  -d               Print compiler dump\n"
     "  -H               Print input file with highlighted syntax\n"
     "  -E <label>       Set entrypoint label (df: main)\n"
-    "  -h               Show this message)\n"
+    "  -h               Show this message\n"
   );
 }
 
