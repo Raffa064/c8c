@@ -2,6 +2,7 @@
 #include "macros.h"
 #include <assert.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
 #include "parser.h"
 
@@ -325,10 +326,7 @@ bool parse_opcode(Lex *l, Opcode *out_op, Label *out_label) {
 };
 
 void parse_file(CompilerState *cs, const char *path) {
-  const char* source = lex_read_file(path, NULL);
-  Lex l = lex_init(LEX_TYPEARRAY(c8c_types), source);
-
-  lex_print_hl(l, true);
+  Lex l = create_lexer(path);
 
   LexResult result;
   while (lex_current(&l, &result)) {

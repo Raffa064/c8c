@@ -18,4 +18,6 @@ C8C(_X_impl)
 LEX_ENUMX(C8C);
 static LexType c8c_types[C8C_COUNT] = LEX_TYPEX(C8C);
 
+Lex create_lexer(const char *path);
+
 #endif

@@ -79,4 +79,6 @@ void resolve_references(CompilerState *cs);
 
 void generate_binary(CompilerState *cs);
 
+void write_to_file(CompilerState cs, const char *path);
+
 #endif

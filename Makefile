@@ -6,7 +6,7 @@ c8c: $(SOURCES)
 	cc -O3 $^ -o $@
 
 %.ch8: %.asm c8c
-	c8c ./$< -o $@
+	./c8c ./$< -o $@
 
 clean:
 	rm c8c ./test/*.ch8

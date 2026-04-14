@@ -209,4 +209,20 @@ void generate_binary(CompilerState *cs) {
   cs->output.rom_size = rom_size;
 }
 
+void write_to_file(CompilerState cs, const char *path) {
+  FILE *rom_file = fopen(path, "w");
 
+  if (!rom_file) {
+    fprintf(stderr, "Can't write to file: %s\n", path);
+    exit(1);
+  }
+
+  size_t total = 0;
+  while (total < cs.output.rom_size) {
+    size_t bytes = fwrite(cs.output.rom + total, 1, cs.output.rom_size - total, rom_file);
+    if (bytes == 0) break;
+    total += bytes;
+  }
+
+  fclose(rom_file);
+}

@@ -1,6 +1,18 @@
 #include "macros.h"
 #include "lexer.h"
 
+Lex create_lexer(const char *path) {
+  const char* source = lex_read_file(path, NULL);
+  
+  if (!source) {
+    fprintf(stderr, "Can't read input file: '%s'\n", path);
+    exit(1);
+  }
+
+  Lex l = lex_init(LEX_TYPEARRAY(c8c_types), source);
+  return l;
+}
+
 size_t c8c_rule_keyword(LexCursor cursor) {
   const char *keywords[] = {
     "CLS",  "DRW", "JP",   "ADD", "SUB",
