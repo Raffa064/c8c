@@ -1,4 +1,14 @@
-all: c8c
+SOURCES = $(wildcard ./src/*.c)
 
-c8c: main.c
+all: c8c test/rom64.ch8
+	
+c8c: $(SOURCES)
 	cc -O3 $^ -o $@
+
+%.ch8: %.asm c8c
+	c8c ./$< -o $@
+
+clean:
+	rm c8c ./test/*.ch8
+
+.PHONY: clean

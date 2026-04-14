@@ -4,6 +4,7 @@
 #ifndef LEX_H
 #define LEX_H
 
+#include <sys/types.h>
 #define LEX_VERSION 2
 
 /*
@@ -30,6 +31,7 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <stdint.h>
+#include "stdint.h"
 
 #ifdef LEX_PROFILER
 #include <time.h>
