@@ -1,7 +1,7 @@
 SOURCES = $(wildcard ./src/*.c)
 
-all: c8c test/rom64.ch8
-	
+all: c8c test/rom64.ch8 test/muliply.ch8
+
 c8c: $(SOURCES)
 	cc -O3 $^ -o $@
 
