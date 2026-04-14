@@ -326,6 +326,7 @@ bool parse_opcode(Lex *l, Opcode *out_op, Label *out_label) {
 };
 
 void parse_file(CompilerState *cs, const char *path) {
+  printf("PARSING: %s\n", path);
   Lex l = create_lexer(path);
 
   LexResult result;
@@ -351,5 +352,7 @@ void parse_file(CompilerState *cs, const char *path) {
 
   if (result == LEX_INVALID_TOKEN)
     report_error(&l, "Invalid token");
+
+  free((void*)l.cursor.source);
 }
 

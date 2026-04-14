@@ -1,6 +1,7 @@
 #ifndef C8C_CORE_H
 #define C8C_CORE_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -37,19 +38,32 @@ typedef struct {
 } ReferenceTable;
 
 typedef struct {
+  struct {
+    const char **items;
+    size_t count, capacity;
+  } input_files;
+
+  struct {
+    bool main_jump; // Appends a jump for main label (or whatever is set as entrypoint)
+    const char *entrypoint;
+  } opt;
+} CompilerInput;
+
+typedef struct {
   uint8_t *rom;
   size_t rom_size;
 } CompilerOutput;
 
 typedef struct {
+  CompilerInput input;
+  CompilerOutput output;
   Block *head, *tail;
   ReferenceTable rtable;
-  CompilerOutput output;
 } CompilerState;
 
 Block *create_block(CompilerState *cs, Label label);
 
-CompilerState create_compiler_state();
+CompilerState create_compiler_state(CompilerInput input);
 
 void push_op(CompilerState *cs, Opcode op);
 
@@ -70,6 +84,8 @@ void dump_reference_table(ReferenceTable rtable);
 void dump_output(CompilerState cs);
 
 void dump_compiler_state(CompilerState cs);
+
+void parse_input_files(CompilerState *cs); 
 
 void resolve_addresses(CompilerState *cs);
 

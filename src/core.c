@@ -1,5 +1,6 @@
 #include "core.h"
 #include "macros.h"
+#include "parser.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,14 +20,24 @@ Block *create_block(CompilerState *cs, Label label) {
   return block;
 }
 
-CompilerState create_compiler_state() {
+CompilerState create_compiler_state(CompilerInput input) {
   Block *dummy = create_block(NULL, NULL);
 
-  return (CompilerState) {
+  CompilerState cs = {
+    .input = input,
     .head = dummy,
     .tail = dummy,
     .rtable = {0}
   };
+
+  // Push jump instruction for entry point (usefull for unordered input files)
+  if (input.opt.main_jump) {
+    // JP @main
+    push_op(&cs, OPCODE(1000)); 
+    push_ref(&cs, cs.input.opt.entrypoint);
+  }
+
+  return cs;
 }
 
 void push_op(CompilerState *cs, Opcode op) {
@@ -136,6 +147,13 @@ void dump_compiler_state(CompilerState cs) {
 
   if (cs.output.rom)
     dump_output(cs);
+}
+
+void parse_input_files(CompilerState *cs) {
+  for (int i = 0; i < cs->input.input_files.count; ++i) {
+    const char * input_path = cs->input.input_files.items[i];
+    parse_file(cs, input_path);
+  }
 }
 
 void resolve_addresses(CompilerState *cs) {
