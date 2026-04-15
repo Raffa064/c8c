@@ -1,6 +1,6 @@
 main:
-  LD v0, $B // A
-  LD v1, $A // B
+  LD v0, $B ; A
+  LD v1, $A ; B
 
   CALL @multiply
   CALL @load_bcd

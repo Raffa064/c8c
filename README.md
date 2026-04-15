@@ -63,4 +63,4 @@ The compiler syntax is almost the same used in the [tecnical reference](http://d
 
 ## Running compiled ROMs
 
-To run the compiled ROMs, you will need a CHIP-8 emulator. You can use my emulator [see repo](https://github.com/Raffa064/c8-emu).
+To run the compiled ROMs, you will need a CHIP-8 emulator. You can use my emulator: [see repo](https://github.com/Raffa064/c8-emu).
