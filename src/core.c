@@ -1,6 +1,7 @@
 #include "core.h"
 #include "macros.h"
 #include "parser.h"
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,7 +35,7 @@ CompilerState create_compiler_state(CompilerInput input) {
   if (input.opt.main_jump) {
     // JP @main
     push_op(&cs, OPCODE(1000)); 
-    push_ref(&cs, cs.input.opt.entrypoint);
+    push_ref(&cs, strdup(cs.input.opt.entrypoint));
   }
 
   return cs;
@@ -243,4 +244,28 @@ void write_to_file(CompilerState cs, const char *path) {
   }
 
   fclose(rom_file);
+}
+
+void free_compiler_state(CompilerState *cs) {
+  free(cs->input.input_files.items);
+  free(cs->output.rom);
+
+  Block *block = cs->head;
+  while (block) {
+    Block *next = block->deque.next;
+
+    free(block->label); // labels are strdupped from source code
+    free(block->array.items);
+    free(block);
+
+    block = next;
+  }
+
+  for (size_t i = 0; i < cs->rtable.count; ++i) {
+    Reference ref = cs->rtable.items[i];
+    free(ref.label); // labels are strdupped from source code
+  }
+  free(cs->rtable.items);
+
+  *cs = (CompilerState) {0};
 }

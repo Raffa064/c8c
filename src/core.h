@@ -5,7 +5,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef const char *Label;
+// Labels are strdupped from source code, so they're heap allocated
+typedef char *Label;
 
 typedef struct {
   uint8_t N, x, y, n, kk;
@@ -45,7 +46,7 @@ typedef struct {
 
   struct {
     bool main_jump; // Appends a jump for main label (or whatever is set as entrypoint)
-    const char *entrypoint;
+    const char *entrypoint; // NOTE: it's stacked allocated from CLI arguments!
   } opt;
 } CompilerInput;
 
@@ -96,5 +97,7 @@ void resolve_references(CompilerState *cs);
 void generate_binary(CompilerState *cs);
 
 void write_to_file(CompilerState cs, const char *path);
+
+void free_compiler_state(CompilerState *cs);
 
 #endif

@@ -42,8 +42,8 @@ bool parse_label_ref(Lex *l, Label *out) {
     if (lex_consume(&b, &tk, ID)) {
       *out = lex_tkstr_dup(tk);
 
-        LEX_MERGE_BRANCH(l, b);
-        return true;
+      LEX_MERGE_BRANCH(l, b);
+      return true;
     }
   }
 
@@ -289,23 +289,23 @@ bool parse_DRAW(Lex *l, Opcode *out_op) {
 bool parse_opcode(Lex *l, Opcode *out_op, Label *out_label) {
   if (parse_NNNN(l, "CLS", OPCODE(00E0), out_op)) return true;    // 00E0
   if (parse_NNNN(l, "RET", OPCODE(00EE), out_op)) return true;    // 00EE
-  if (parse_Nnnn(l, "JP",   1, out_op, out_label)) return true;   // 1nnn
-  if (parse_Nnnn(l, "CALL", 2, out_op, out_label)) return true;   // 2nnn
-  if (parse_Nxkk(l, "SE",   3,      out_op)) return true;         // 3xkk
-  if (parse_Nxkk(l, "SNE",  4,      out_op)) return true;         // 4xkk
-  if (parse_Nxyn(l, "SE",   5, 0,   out_op)) return true;         // 5xy0
-  if (parse_Nxkk(l, "LD",   6,      out_op)) return true;         // 6xkk
-  if (parse_Nxkk(l, "ADD",  7,      out_op)) return true;         // 7xkk
-  if (parse_Nxyn(l, "LD",   8, 0,   out_op)) return true;         // 8xy0
-  if (parse_Nxyn(l, "OR",   8, 1,   out_op)) return true;         // 8xy1
-  if (parse_Nxyn(l, "AND",  8, 2,   out_op)) return true;         // 8xy2
-  if (parse_Nxyn(l, "XOR",  8, 3,   out_op)) return true;         // 8xy3
-  if (parse_Nxyn(l, "ADD",  8, 4,   out_op)) return true;         // 8xy4
-  if (parse_Nxyn(l, "SUB",  8, 5,   out_op)) return true;         // 8xy5
-  if (parse_Nxnn(l, "SHR",  8, 0x06,   out_op)) return true;      // 8x06 or 8xy6
-  if (parse_Nxyn(l, "SUBN", 8, 7,   out_op)) return true;         // 8xy7
-  if (parse_Nxnn(l, "SHL",  8, 0x0E, out_op)) return true;        // 8x0E or 8xyE
-  if (parse_Nxyn(l, "SNE",  9, 0,   out_op)) return true;         // 9xy0
+  if (parse_Nnnn(l, "JP",    1, out_op, out_label)) return true;  // 1nnn
+  if (parse_Nnnn(l, "CALL",  2, out_op, out_label)) return true;  // 2nnn
+  if (parse_Nxkk(l, "SE",    3,      out_op)) return true;        // 3xkk
+  if (parse_Nxkk(l, "SNE",   4,      out_op)) return true;        // 4xkk
+  if (parse_Nxyn(l, "SE",    5, 0,   out_op)) return true;        // 5xy0
+  if (parse_Nxkk(l, "LD",    6,      out_op)) return true;        // 6xkk
+  if (parse_Nxkk(l, "ADD",   7,      out_op)) return true;        // 7xkk
+  if (parse_Nxyn(l, "LD",    8, 0,   out_op)) return true;        // 8xy0
+  if (parse_Nxyn(l, "OR",    8, 1,   out_op)) return true;        // 8xy1
+  if (parse_Nxyn(l, "AND",   8, 2,   out_op)) return true;        // 8xy2
+  if (parse_Nxyn(l, "XOR",   8, 3,   out_op)) return true;        // 8xy3
+  if (parse_Nxyn(l, "ADD",   8, 4,   out_op)) return true;        // 8xy4
+  if (parse_Nxyn(l, "SUB",   8, 5,   out_op)) return true;        // 8xy5
+  if (parse_Nxnn(l, "SHR",   8, 0x06,   out_op)) return true;     // 8x06 or 8xy6
+  if (parse_Nxyn(l, "SUBN",  8, 7,   out_op)) return true;        // 8xy7
+  if (parse_Nxnn(l, "SHL",   8, 0x0E, out_op)) return true;       // 8x0E or 8xyE
+  if (parse_Nxyn(l, "SNE",   9, 0,   out_op)) return true;        // 9xy0
   if (parse_NInnn(l, "LD", 0xA, out_op, out_label)) return true;  // Annn
   if (parse_Nnnn(l, "JP",  0xB, out_op, out_label)) return true;  // Bnnn
   if (parse_Nxkk(l, "RND", 0xC,  out_op)) return true;            // Cxkk
@@ -352,6 +352,7 @@ void parse_file(CompilerState *cs, const char *path) {
   if (result == LEX_INVALID_TOKEN)
     report_error(&l, "Invalid token");
 
+  // Free up heap allocated source code
   free((void*)l.cursor.source);
 }
 

@@ -12,11 +12,7 @@
   X(HEX,     c8c_rule_hex)\
   X(ID,      lex_builtin_rule_id)
 
-#define _X_impl(_, rule, ...) size_t rule(LexCursor cursor);
-C8C(_X_impl)
-
-LEX_ENUMX(C8C);
-static LexType c8c_types[C8C_COUNT] = LEX_TYPEX(C8C);
+LEX_XMACRO_FRAMEWORK(C8C, C8CTypes, c8c_types);
 
 Lex create_lexer(const char *path);
 

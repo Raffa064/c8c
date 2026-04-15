@@ -82,4 +82,5 @@ int main(int argc, char **argv) {
     dump_compiler_state(cs);
 
   write_to_file(cs, params.output_path);
+  free_compiler_state(&cs);
 }
