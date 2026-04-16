@@ -9,7 +9,8 @@ void report_error(Lex *l, const char *msg);
 
 void skip_comma(Lex *l);
 
-bool parse_label_def(Lex *l, Label *out);
+// label:?
+bool parse_label_def(Lex *l, Label *out, bool *is_raw);
 
 // @label
 bool parse_label_ref(Lex *l, Label *out);

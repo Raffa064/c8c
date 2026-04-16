@@ -8,6 +8,10 @@
 
 #define HEX_CHARS "0123456789abcdefABCDEF"
 
+#define SPRITE_ROW_SIZE 8 
+#define SPRITE_HIGH_BIT_CHAR '='
+#define SPRITE_LOW_BIT_CHAR  '-'
+
 #define ARRAYLEN(a) (sizeof(a)/sizeof(a[0]))
 
 #define DA_DEFAULT_CAPACITY 8

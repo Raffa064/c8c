@@ -2,6 +2,8 @@
 #include "macros.h"
 #include <assert.h>
 #include <ctype.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "parser.h"
@@ -17,13 +19,14 @@ void skip_comma(Lex *l) {
     report_error(l, "Missing comma");
 }
 
-// label:
-bool parse_label_def(Lex *l, Label *out) {
+// label:?
+bool parse_label_def(Lex *l, Label *out, bool *is_raw) {
   Lex b = LEX_BRANCH(l);
 
   LexToken tk;
   if (lex_consume(&b, &tk, ID))
     if (lex_skip(&b, TERM, ":")) {
+        *is_raw = lex_skip(&b, TERM, "?");
         *out = lex_tkstr_dup(tk);
 
         LEX_MERGE_BRANCH(l, b);
@@ -56,8 +59,7 @@ bool parse_hex(Lex *l, uint16_t *out) {
   if (lex_consume(l, &tk, HEX)) {
     *out = strtol(tk.sv.begin + 1, NULL, 16);
     return true;
-  } 
-
+  }
 
   return false;
 }
@@ -325,28 +327,78 @@ bool parse_opcode(Lex *l, Opcode *out_op, Label *out_label) {
   return false;
 };
 
+bool parse_sprite(Lex *l, uint8_t *data) {
+  LexToken spr;
+  if (lex_consume(l, &spr, SPRITE)) {
+    uint8_t row = 0;
+    for (int i = 0; i < SPRITE_ROW_SIZE; ++i) {
+      row <<= 1;
+      
+      char ch = lex_tkstr(spr)[i];
+
+      if (ch == SPRITE_HIGH_BIT_CHAR)
+        row |= 1;
+    }
+
+    *data = row;
+    return true;
+  }
+
+  return false;
+}
+
+bool parse_data(Lex *l, uint8_t *data) {
+  if (!lex_skip(l, TERM, "."))
+    return false;
+
+  uint16_t word;
+  if (parse_hex(l, &word)) {
+    if (word >> 8)
+      report_error(l, "Raw data blocks only accepts one byte at a time");
+
+    *data = word & 0xFF;
+    return true;
+  }
+
+  if (parse_sprite(l, data))
+    return true;
+
+  report_error(l, "Expecting sprite row token after dot operand");
+}
+
 void parse_file(CompilerState *cs, const char *path) {
   Lex l = create_lexer(path);
 
   LexResult result;
   while (lex_current(&l, &result)) {
-    Label label;
-    if (parse_label_def(&l, &label)) {
-      create_block(cs, label);
+    Label label = NULL;
+    bool is_raw = false;
+    if (parse_label_def(&l, &label, &is_raw)) {
+      create_block(cs, label, is_raw);
       continue;
     }
 
-    Opcode op;
-    Label ref_label = NULL;
-    if (parse_opcode(&l, &op, &ref_label)) {
-      push_op(cs, op);
-      if (ref_label)
-        push_ref(cs, ref_label);
+    if (cs->tail->is_raw) {
+      uint8_t data;
+      if (parse_data(&l, &data)) { 
+        push_data(cs, data);
+        continue;
+      }
+
+      report_error(&l, "Invalid syntax for raw data block");
+    } else {
+      Opcode op;
+      Label ref_label = NULL;
+      if (parse_opcode(&l, &op, &ref_label)) {
+        push_op(cs, op);
+        if (ref_label)
+          push_ref(cs, ref_label);
+        
+        continue;
+      }
       
-      continue;
+      report_error(&l, "Invalid syntax for text block");
     }
-
-    report_error(&l, "Invalid syntax");
   }
 
   if (result == LEX_INVALID_TOKEN)

@@ -1,16 +1,19 @@
 #include "core.h"
 #include "macros.h"
 #include "parser.h"
+#include <assert.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-Block *create_block(CompilerState *cs, Label label) {
+Block *create_block(CompilerState *cs, Label label, bool is_raw) {
   Block *block = malloc(sizeof(Block));
   memset(block, 0, sizeof(Block));
 
   block->label = label;
+  block->is_raw = is_raw;
 
   if (cs) {
     block->deque.prev = cs->tail;
@@ -22,7 +25,7 @@ Block *create_block(CompilerState *cs, Label label) {
 }
 
 CompilerState create_compiler_state(CompilerInput input) {
-  Block *dummy = create_block(NULL, NULL);
+  Block *dummy = create_block(NULL, NULL, false);
 
   CompilerState cs = {
     .input = input,
@@ -42,7 +45,13 @@ CompilerState create_compiler_state(CompilerInput input) {
 }
 
 void push_op(CompilerState *cs, Opcode op) {
-  da_append(cs->tail->array, op);
+  assert(!cs->tail->is_raw);
+  da_append(cs->tail->op_array, op);
+}
+
+void push_data(CompilerState *cs, uint8_t data) {
+  assert(cs->tail->is_raw);
+  da_append(cs->tail->data_array, data);
 }
 
 uint16_t encode_op(Opcode op) {
@@ -78,9 +87,11 @@ Opcode decode_op(uint16_t inst) {
 }
 
 void push_ref(CompilerState *cs, Label label) {
+  assert(!cs->tail->is_raw);
+
   Reference ref = {
     .block = cs->tail,
-    .index = (cs->tail->array.count - 1),
+    .index = (cs->tail->op_array.count - 1),
     .label = label
   };
   
@@ -98,9 +109,16 @@ void dump_blocks(Block *head) {
       printf("  $%04x %s\n", curr->addr, curr->label);
     }
 
-    for (int i = 0; i < curr->array.count; ++i) {
-      Opcode op = curr->array.items[i];
-      printf("  %5d %04x\n", i, encode_op(op));
+    if (curr->is_raw) {
+      for (int i = 0; i < curr->data_array.count; ++i) {
+        uint8_t data = curr->data_array.items[i];
+        printf("  %5d %02x\n", i, data);
+      }
+    } else {
+      for (int i = 0; i < curr->op_array.count; ++i) {
+        Opcode op = curr->op_array.items[i];
+        printf("  %5d %04x\n", i, encode_op(op));
+      }
     }
     
     curr = curr->deque.next;
@@ -163,17 +181,26 @@ void resolve_addresses(CompilerState *cs) {
   Block *curr = cs->head;
   while (curr) {
     curr->addr = addr;
-    addr += curr->array.count * OPCODE_SIZE_BYTES;
+    
+    if (curr->is_raw)
+      addr += curr->data_array.count;
+    else
+      addr += curr->op_array.count * OPCODE_SIZE_BYTES;
+    
     curr = curr->deque.next;
   }
 }
 
-size_t count_opcodes(CompilerState *cs) {
+size_t calculate_rom_size(CompilerState *cs) {
   size_t count = 0;
 
   Block *curr = cs->head;
   while (curr) {
-    count += curr->array.count;
+    if (curr->is_raw)
+      count += curr->data_array.count;
+    else
+      count += curr->op_array.count * OPCODE_SIZE_BYTES;
+    
     curr = curr->deque.next;
   }
 
@@ -189,7 +216,9 @@ void resolve_references(CompilerState *cs) {
     while (curr) {
       if (curr->label && strcmp(curr->label, ref.label) == 0) {
         found = 1;
-        Opcode *op = &ref.block->array.items[ref.index];
+
+        assert(!ref.block->is_raw);
+        Opcode *op = &ref.block->op_array.items[ref.index];
         op->nnn = curr->addr;
         break;
       }
@@ -205,20 +234,28 @@ void resolve_references(CompilerState *cs) {
 }
 
 void generate_binary(CompilerState *cs) {
-  size_t op_count = count_opcodes(cs);
+  size_t op_count = calculate_rom_size(cs);
   size_t rom_size = op_count * OPCODE_SIZE_BYTES;
   uint8_t *rom = malloc(rom_size);
   memset(rom, 0, rom_size);
 
   Block *curr = cs->head;
   while (curr) {
-    for (int i = 0; i < curr->array.count; i++) {
-      uint16_t addr = (curr->addr + i * 2) - PROGRAMS_START_ADDR;
-      Opcode op = curr->array.items[i];
-      uint16_t inst = encode_op(op);
-      
-      rom[addr] = high(inst); 
-      rom[addr + 1] = low(inst);
+    if (curr->is_raw) {
+      for (int i = 0; i < curr->data_array.count; i++) {
+        uint16_t addr = (curr->addr + i) - PROGRAMS_START_ADDR;
+        uint8_t data = curr->data_array.items[i];
+        rom[addr] = data; 
+      }
+    } else {
+      for (int i = 0; i < curr->op_array.count; i++) {
+        uint16_t addr = (curr->addr + i * 2) - PROGRAMS_START_ADDR;
+        Opcode op = curr->op_array.items[i];
+        uint16_t inst = encode_op(op);
+        
+        rom[addr] = high(inst); 
+        rom[addr + 1] = low(inst);
+      }
     }
 
     curr = curr->deque.next;
@@ -255,7 +292,12 @@ void free_compiler_state(CompilerState *cs) {
     Block *next = block->deque.next;
 
     free(block->label); // labels are strdupped from source code
-    free(block->array.items);
+    
+    if (block->is_raw)
+      free(block->data_array.items);
+    else  
+      free(block->op_array.items);
+    
     free(block);
 
     block = next;
@@ -265,6 +307,7 @@ void free_compiler_state(CompilerState *cs) {
     Reference ref = cs->rtable.items[i];
     free(ref.label); // labels are strdupped from source code
   }
+
   free(cs->rtable.items);
 
   *cs = (CompilerState) {0};

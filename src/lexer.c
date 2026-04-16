@@ -47,4 +47,23 @@ size_t c8c_rule_hex(LexCursor cursor) {
   return LEX_NO_MATCH;
 }
 
-size_t c8c_rule_term(LexCursor cursor) { return lex_match_chars(cursor, ":,@?"); }
+size_t c8c_rule_sprite(LexCursor cursor) {
+  size_t len = LEX_NO_MATCH;
+
+  char sprite_chars[] = { 
+    SPRITE_HIGH_BIT_CHAR,
+    SPRITE_LOW_BIT_CHAR,
+    '\0'
+  };
+
+  for (int i = 0; i < SPRITE_ROW_SIZE; ++i) {
+    if (!lex_match_chars(cursor, sprite_chars))
+      return LEX_NO_MATCH;
+
+    lex_cursor_move(&cursor, 1);
+  }
+
+  return SPRITE_ROW_SIZE;
+}
+
+size_t c8c_rule_term(LexCursor cursor) { return lex_match_chars(cursor, ":,@?."); }

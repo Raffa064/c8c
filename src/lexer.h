@@ -10,6 +10,7 @@
   X(KEYWORD, c8c_rule_keyword)\
   X(TERM,    c8c_rule_term)\
   X(HEX,     c8c_rule_hex)\
+  X(SPRITE,  c8c_rule_sprite)\
   X(ID,      lex_builtin_rule_id)
 
 LEX_XMACRO_FRAMEWORK(C8C, C8CTypes, c8c_types);

@@ -15,12 +15,21 @@ typedef struct {
 
 typedef struct {
   Label label;
+  bool is_raw;
+  
   uint16_t addr; // zero = unsolved
 
-  struct {
-    Opcode *items;
-    size_t count, capacity;
-  } array;
+  union {
+    struct {
+      Opcode *items;
+      size_t count, capacity;
+    } op_array;
+
+    struct {
+      uint8_t *items;
+      size_t count, capacity;
+    } data_array;
+  }; 
 
   struct { 
     void *prev, *next; 
@@ -62,19 +71,17 @@ typedef struct {
   ReferenceTable rtable;
 } CompilerState;
 
-Block *create_block(CompilerState *cs, Label label);
+Block *create_block(CompilerState *cs, Label label, bool is_raw);
 
 CompilerState create_compiler_state(CompilerInput input);
 
-void push_op(CompilerState *cs, Opcode op);
-
 uint16_t encode_op(Opcode op);
 
-uint8_t high(uint16_t word);
-
-uint8_t low(uint16_t word);
-
 Opcode decode_op(uint16_t inst);
+
+void push_op(CompilerState *cs, Opcode op);
+
+void push_data(CompilerState *cs, uint8_t data);
 
 void push_ref(CompilerState *cs, Label label);
 
@@ -90,7 +97,7 @@ void parse_input_files(CompilerState *cs);
 
 void resolve_addresses(CompilerState *cs);
 
-size_t count_opcodes(CompilerState *cs);
+size_t calculate_rom_size(CompilerState *cs);
 
 void resolve_references(CompilerState *cs);
 
